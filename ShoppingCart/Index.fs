@@ -30,12 +30,13 @@ module Cart =
   let calculateTotal (cart: Cart) : Price =
     cart.Items
     |> Map.toList
-    |> List.sumBy (fun (_, (prd, qty, dsc)) ->
-      let totalDiscount = cart.Discount + dsc
-      totalDiscount.Apply prd.Price * decimal qty)
+    |> List.sumBy (fun (_, item) -> Item.total item cart.Discount)
 
 
   module Item =
+
+    let total (prd, qty, dsc) (cartDsc: Discount) : Price =
+      (cartDsc + dsc).Apply prd.Price * decimal qty
 
     let add (prd: Product, dsc: Discount) (cart: Cart) : Cart =
       { cart with
@@ -52,5 +53,4 @@ module Cart =
       match Map.tryFind pId cart.Items with
       | Some(prd, _, dsc) when qty > 0 ->
         { cart with Items = cart.Items |> Map.add pId (prd, qty, dsc) }
-      | Some _ -> { cart with Items = cart.Items |> Map.remove pId }
-      | None -> cart
+      | _ -> remove pId cart

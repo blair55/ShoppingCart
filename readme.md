@@ -27,12 +27,10 @@ In the root folder
 ```bash
 $ dotnet run --project ShoppingCart.Tests
 ```
-## Run Sample Client
+## Watch Sample Client
 
 In the root folder
 
 ```bash
-$ dotnet fsi scratchpad.fsx
-
-> Total Price: 159.00
+$ dotnet watch --project ShoppingCart.Client
 ```
