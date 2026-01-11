@@ -7,6 +7,7 @@ type Op =
   | Remove of ProductId
   | UpdateQuantity of ProductId * Quantity
   | SetDiscount of Discount
+  | AddBundle of Bundle
 
 type Logger = { Op: Op -> Unit; Cart: Cart -> Unit }
 
@@ -18,6 +19,7 @@ type LoggedCartBuilder(logger: Logger) =
     | Remove pId -> Cart.Item.remove pId cart
     | UpdateQuantity(pId, qty) -> Cart.Item.updateQuantity (pId, qty) cart
     | SetDiscount dsc -> { cart with Discount = dsc }
+    | AddBundle bundle -> Cart.Bundle.add bundle cart
 
   let (<+>) cart op =
     logger.Op op
@@ -26,10 +28,10 @@ type LoggedCartBuilder(logger: Logger) =
     cart
 
   member _.Yield _ =
-    { Items = Map.empty; Discount = Discount.Zero }
+    { Items = []; Discount = Discount.Zero; Bundles = [] }
 
   member _.Zero _ =
-    { Items = Map.empty; Discount = Discount.Zero }
+    { Items = []; Discount = Discount.Zero; Bundles = [] }
 
   [<CustomOperation("add")>]
   member _.Add(cart, prd, ?dsc) =
@@ -43,5 +45,9 @@ type LoggedCartBuilder(logger: Logger) =
 
   [<CustomOperation("discount")>]
   member _.SetDiscount(cart, dsc) = cart <+> SetDiscount(Discount dsc)
+
+  [<CustomOperation("bundle_discount")>]
+  member _.AddBundleDiscount(cart, items: (ProductId * Quantity) list, discount: decimal) =
+    cart <+> AddBundle { Items = items; Discount = Discount discount }
 
 let loggedCart logger = LoggedCartBuilder logger
